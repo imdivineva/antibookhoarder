@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anti-Book Hoarder</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f6f7fb;
+}
+
+header {
+    background: white;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 14px;
+    border: none;
+    background: #222;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
+    gap: 15px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #eef2ff;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>📚 Anti-Book Hoarder</h1>
+<p>Own less. Read more. Remember why you started.</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Add Book</h3>
+
+<input id="title" placeholder="Book Title">
+<input id="author" placeholder="Author">
+
+<select id="status">
+<option>Unread</option>
+<option>Reading</option>
+<option>Finished</option>
+</select>
+
+<textarea id="reason" placeholder="Why did you buy this book?"></textarea>
+
+<button onclick="addBook()">Save Book</button>
+</div>
+
+<div class="grid" id="bookList"></div>
+
+</div>
+
+<script>
+
+function getBooks(){
+return JSON.parse(localStorage.getItem("abk_books") || "[]");
+}
+
+function saveBooks(data){
+localStorage.setItem("abk_books", JSON.stringify(data));
+}
+
+function addBook(){
+let books = getBooks();
+
+let title = document.getElementById("title").value;
+let author = document.getElementById("author").value;
+let status = document.getElementById("status").value;
+let reason = document.getElementById("reason").value;
+
+let priority = calculatePriority(status, reason);
+
+books.push({
+title,
+author,
+status,
+reason,
+priority
+});
+
+saveBooks(books);
+renderBooks();
+
+document.getElementById("title").value = "";
+document.getElementById("author").value = "";
+document.getElementById("reason").value = "";
+}
+
+function calculatePriority(status, reason){
+let score = 0;
+
+if(status === "Unread") score += 2;
+if(status === "Reading") score += 1;
+
+if(reason.toLowerCase().includes("growth")) score += 2;
+if(reason.toLowerCase().includes("business")) score += 2;
+if(reason.length < 10) score -= 1;
+
+return score;
+}
+
+function renderBooks(){
+let books = getBooks();
+
+books.sort((a,b) => b.priority - a.priority);
+
+document.getElementById("bookList").innerHTML =
+books.map(b => `
+<div class="card">
+<h3>${b.title}</h3>
+<p><strong>${b.author}</strong></p>
+
+<div class="tag">${b.status}</div>
+<div class="tag">Priority: ${b.priority}</div>
+
+<p style="margin-top:10px;">${b.reason || "No reason added"}</p>
+</div>
+`).join("");
+}
+
+renderBooks();
+
+</script>
+
+</body>
+</html>
